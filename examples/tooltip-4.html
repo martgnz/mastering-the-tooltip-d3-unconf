@@ -30,11 +30,6 @@
   padding: 6px 8px;
   font-size: 14px;
 }
-
-/* let's do this */
-/* tip: use flexbox */
-.tooltip .row {
-}
 </style>
 </head>
 
@@ -48,7 +43,10 @@
 <h1>Example 4: Distance-limited interaction</h1>
 
 <p>Distance-limited interactions are always a sign of a Good Tooltip, specially when we have empty spaces in the chart.</p>
-<p>It is supported by default in d3-voronoi, but it's not on d3-delaunay. Let's add it!</p>
+
+<p>The idea is to add a certain pixel threshold to our Delaunay interaction, so we only show the tooltip when the mouse is close enough the the point.</p>
+
+<p>This is supported by default in d3-voronoi, but it's not on d3-delaunay. Let's add it!</p>
 
 <h2 class="chart-title">Support of remain by age groups</h2>
 <h3 class="chart-subtitle">Sample of 2.500 representative demographics</h3>
@@ -170,15 +168,16 @@ d3.csv('/data/brexit_profiles.csv', d3.autoType)
       const idx = delaunay.find(mx, my, 0);
       
       // the minimum distance for an interaction
-      // 20 or 30 work fine most of the time
+      // 20 or 30 pixels work fine most of the time
       const threshold = 20;
 
       // if we find a point, what do we do?
       if (idx !== null) {
-        // check the distance first
+        // call getDistance to obstain the distance first
         // ...
 
         // and now check that the point is inside our threshold
+        // we can use a ternary to either show or hide the tooltip
         // ...
       }
 
@@ -197,9 +196,6 @@ d3.csv('/data/brexit_profiles.csv', d3.autoType)
         .style('visibility', 'visible')
         .style('left', `${mx}px`)
         .style('top', `${my + 40}px`)
-        // this is what we had before
-        // let's turn it into a GOOD table
-        // (but pls dont use a table...)
         .text(`Remain: ${ft(datum.pred_remain)}%`);
     }
 

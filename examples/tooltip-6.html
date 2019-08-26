@@ -55,9 +55,11 @@
 
 <h1>Example 6: Text scales</h1>
 
-<p>As a rule of thumb tables can (and should be) be used in tooltips most of the time. But sometimes they aren't the best way to communicate our data.</p>
+<p>As a rule of thumb tables can (and should) be used in tooltips most of the time. But sometimes they aren't the best way to communicate our data.</p>
 
-<p>Something usually overlooked is that d3 scales can be applied to any type of point. Anything. Either graphical or non-graphical. This time we are making use of those capabilities to create a text-driven tooltip.</p>
+<p>For that we can use a ‘narrative tooltip’, where we form a sentence with our variables. For example instead of just rendering a table with a long list of values we could say <i>“A 60-75 year old man who is against remain, earns £15-25k per year and lives in the North”</i>.</p>
+
+<p>Something usually overlooked is that d3 scales can be applied to any type of point. Either graphical or non-graphical. This time we are making use of those capabilities to create a text-driven tooltip.</p>
 
 <h2 class="chart-title">Support of remain by age groups</h2>
 <h3 class="chart-subtitle">Sample of 2.500 representative demographics</h3>
@@ -240,11 +242,8 @@ d3.csv('/data/brexit_profiles.csv', d3.autoType)
         .style('visibility', 'visible')
         .style('left', `${mx}px`)
         .style('top', `${my + 40}px`)
-        // let's create a sentence
-        .html(`A ${datum.age_bucket} year old ${sexText(datum.sex)} who ${remainText(datum.pred_remain)},
-          earns ${incomeText(datum.inc_bucket)},
-          ${educationText(datum.educ_n)}, lives in ${regionPronoun(datum.region6)} ${datum.region6}
-          and is ${politicsText(datum.poli_int_bucket)} in politics`);
+        // let's create our sentence
+        .html(``);
     }
 
     function mouseleft() {

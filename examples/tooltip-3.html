@@ -42,8 +42,11 @@
 
 <h1>Example 3: Charting Brexit</h1>
 
-<p>From now on we're going to use a dataset of Brexit demographics that my colleague <a href="https://twitter.com/JamesFransham">James Fransham</a> put together earlier this year using microdata from YouGov.</p>
-<p>One reason why I chose this dataset is that it has many interesting columns. Read the reference <a href="https://github.com/TheEconomist/graphic-detail-data/tree/master/data/2019-02-23_opinion-on-brexit">here</a>.</p>
+<p>From now on we're going to use a dataset of Brexit demographics that my colleague <a href="https://twitter.com/JamesFransham">James Fransham</a> put together earlier this year using microdata from YouGov. The article we published with this data is <a href="https://www.economist.com/graphic-detail/2019/02/22/profiles-of-a-divided-country">here</a>.</p>
+
+<p>Every point represents a demographic group, and the plot visualises our prediction of their Brexit preference by age groups. One reason why I chose this dataset is that it has many interesting columns. Read the reference <a href="https://github.com/TheEconomist/graphic-detail-data/tree/master/data/2019-02-23_opinion-on-brexit">here</a>.</p>
+
+<p>Now we can start with our tooltip!</p>
 
 <h2 class="chart-title">Support of remain by age groups</h2>
 <h3 class="chart-subtitle">Sample of 2.500 representative demographics</h3>
@@ -176,6 +179,7 @@ d3.csv('/data/brexit_profiles.csv', d3.autoType)
       // ...
 
       // aaand let's fill our tooltip
+      // we can use the pred_remain variable
       // d3.select('.tooltip')
       //   ...
     }

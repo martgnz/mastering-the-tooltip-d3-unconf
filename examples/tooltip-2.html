@@ -38,10 +38,9 @@
   <a href="tooltip-3.html">→ Next</a>
 </nav>
 
+<h1>Example 2: Our first tooltip</h1>
 
-<h1>Example 2: Using d3.mouse</h1>
-
-<p>d3.mouse is nice because is simple and defaults back to the first touch on mobile screens. It will be removed in <a href="https://github.com/d3/d3-selection/issues/191">d3v6</a>, so please be aware that this will change soon.</p>
+<p>There are various methods to hide and show a tooltip. You can use <code>display: none</code>, but I'm used to <code>visibility</code>. Now we can toggle the tooltip with a mouseleave event.</p>
 
 <div class="container">
   <svg class="chart"></svg>
@@ -77,18 +76,15 @@ svg.append('rect')
   .on('mouseleave', mouseleft)
 
 function mousemoved() {
-  // let's use d3.mouse here
-  // remember to ALWAYS pass a NODE
-  // i have forgotten this sooo many times
-  // ...
+  const [x, y] = d3.mouse(svg.node());
 
-  d3.select('.tooltip')
+  d3.select('.tooltip').text(`${x}, ${y}`)
     // how to show and hide our tooltip?
     // we can use the css visibility property
 }
 
 function mouseleft() {
-  // let's hide our tooltip here
+  // and let's hide our tooltip here
 }
 
 </script>

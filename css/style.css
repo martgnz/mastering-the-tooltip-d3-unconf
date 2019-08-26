@@ -10,6 +10,12 @@ p {
   line-height: 1.5;
   max-width: 600px;
 }
+code {
+  font-size: 80%;
+  background: #eee;
+  padding: 5px;
+  border-radius: 5px;
+}
 ul li {
   margin-bottom: 0.5em;
 }

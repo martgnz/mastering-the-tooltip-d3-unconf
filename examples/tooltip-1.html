@@ -34,6 +34,8 @@
 
 <p>To start we can print <i>x</i> and <i>y</i> on the screen.</p>
 
+<p><a href="https://github.com/d3/d3-selection#mouse">d3.mouse</a> is nice because is simple to get our <i>x</i> and <i>y</i> and defaults back to the first touch on mobile screens. It will be removed in <a href="https://github.com/d3/d3-selection/issues/191">d3v6</a>, so please be aware that this will change soon.</p>
+
 <div class="container">
   <svg class="chart"></svg>
   <div class="tooltip"></div>
@@ -68,7 +70,11 @@ svg.append('rect')
 
 function mousemoved() {
   // and we can use d3.mouse to get x and  y
-  // note: this will change with d3 v6
+  // remember to ALWAYS pass a NODE
+  // i have forgotten this sooo many times
+
+  // now let's print x and y inside .tooltip
+  // ...
 }
 
 </script>
