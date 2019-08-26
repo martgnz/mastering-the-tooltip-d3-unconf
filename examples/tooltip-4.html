@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>Example 4</title>
+<link rel="stylesheet" href="/css/style.css"></link>
+<script src="/lib/d3.v5.min.js"></script>
+<script src="/lib/d3-delaunay.min.js"></script>
+
+<style>
+.container {
+  margin-top: 1em;
+  position: relative;
+}
+.axis-label {
+  font-size: 14px;
+}
+.tooltip {
+  position: absolute;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  visibility: hidden;
+  box-sizing: border-box;
+  pointer-events: none;
+  background: white;
+  border: 1px solid #ddd;
+  box-shadow: 0 0 4px rgba(0,0,0,.1);
+  padding: 6px 8px;
+  font-size: 14px;
+}
+
+/* let's do this */
+/* tip: use flexbox */
+.tooltip .row {
+}
+</style>
+</head>
+
+<body>
+<nav>
+  <a href="tooltip-3.html">← Previous</a>
+  <a href="/"><i>Exercise list</i></a>
+  <a href="tooltip-5.html">→ Next</a>
+</nav>
+
+<h1>Example 4: Distance-limited interaction</h1>
+
+<p>Distance-limited interactions are always a sign of a Good Tooltip, specially when we have empty spaces in the chart.</p>
+<p>It is supported by default in d3-voronoi, but it's not on d3-delaunay. Let's add it!</p>
+
+<h2 class="chart-title">Support of remain by age groups</h2>
+<h3 class="chart-subtitle">Sample of 2.500 representative demographics</h3>
+
+<div class="container">
+  <svg class="chart"></svg>
+  <div class="tooltip"></div>
+</div>
+
+<small>Sources: YouGov; <a href="https://github.com/TheEconomist/graphic-detail-data/tree/master/data/2019-02-23_opinion-on-brexit"><i>The Economist</i></a></small>
+
+<footer>
+  Mastering the tooltip · <a href="https://twitter.com/martgnz">Martín González</a> · <a href="http://visfest.com/unconf2019/">d3 unconf 2019</a>
+</footer>
+
+</body>
+
+<script>
+const margin = { top: 5, right: 10, bottom: 20, left: 35 };
+
+const width = 960 - margin.left - margin.right;
+const height = 500 - margin.top - margin.bottom;
+
+const ft = d3.format('.1f');
+
+const svg = d3.select('.chart')
+  .attr('width', width + margin.left + margin.right)
+  .attr('height', height + margin.top + margin.bottom)
+  .append('g')
+  .attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+d3.csv('/data/brexit_profiles.csv', d3.autoType)
+  .then(data => {
+    const nest = d3.nest()
+      .key(d => d.age_bucket)
+      .entries(data);
+
+    const x = d3.scaleLinear()
+      .domain([0, 100])
+      .range([0, width]);
+
+    const y = d3.scalePoint()
+      .padding(0.5)
+      .domain(["18-29", "30-44", "45-60", "60-75", "75+"])
+      .range([height, 0]);
+
+    const radius = 3;
+
+    nest.forEach(group => {
+      const simulation = d3.forceSimulation(group.values)
+        .force('x', d3.forceX(d => x(d.pred_remain)).strength(0.9))
+        .force('y', d3.forceY(d => y(d.age_bucket)))
+        .force('collide', d3.forceCollide(d => radius + 0.25))
+        .stop();
+
+      for (let i = 0; i < 120; ++i) simulation.tick();
+    });
+
+    const flat = nest.map(d => d.values).flat();
+
+    const delaunay = d3.Delaunay.from(flat, d => d.x, d => d.y);
+
+    svg.append('g')
+      .attr('class', 'x axis')
+      .attr('transform', `translate(0, ${height})`)
+      .call(d3.axisBottom(x));
+
+    svg.append('g')
+      .attr('class', 'y axis')
+      .call(d3.axisLeft(y).ticks(5));
+
+    svg.append('line')
+      .attr('stroke', '#d3d3d3')
+      .attr('x1', x(50))
+      .attr('x2', x(50))
+      .attr('y2', height);
+
+    svg.append('g')
+      .attr('opacity', 0.75)
+      .attr('stroke', 'white')
+      .attr('fill', d => 'darkorange')
+      .selectAll('g')
+      .data(nest)
+      .join(enter => {
+        enter.append('g')
+          .selectAll('circle')
+          .data(d => d.values)
+          .join('circle')
+          .attr('r', radius)
+          .attr('cx', d => d.x)
+          .attr('cy', d => d.y)
+      });
+
+    svg.append('circle')
+      .attr('class', 'hover-circle')
+      .style('visibility', 'hidden')
+      .attr('r', radius)
+      .attr('fill', 'none')
+      .attr('stroke', 'black');
+
+    svg.append('rect')
+      .attr('fill', 'transparent')
+      .attr('width', width)
+      .attr('height', height)
+      .on('mousemove', mousemoved)
+      .on('mouseleave', mouseleft);
+
+    // calculate the distance to the point here
+    // this is the pythagoras theorem from high school
+    // https://stackoverflow.com/questions/20916953/get-distance-between-two-points-in-canvas
+    function getDistance(datum, mx, my) {
+      // tip: x1 will be our datum.x and x2, our mx
+    }
+
+    // this function will now only find our point
+    function mousemoved() {
+      const [mx, my] = d3.mouse(svg.node());
+
+      const idx = delaunay.find(mx, my, 0);
+      
+      // the minimum distance for an interaction
+      // 20 or 30 work fine most of the time
+      const threshold = 20;
+
+      // if we find a point, what do we do?
+      if (idx !== null) {
+        // check the distance first
+        // ...
+
+        // and now check that the point is inside our threshold
+        // ...
+      }
+
+      // if we don't find a point, hide
+      return mouseleft();
+    }
+
+    // and this will paint what we need on hover
+    function highlight(datum, mx, my) {
+      svg.select('.hover-circle')
+        .style('visibility', 'visible')
+        .attr('cx', datum.x)
+        .attr('cy', datum.y);
+
+      d3.select('.tooltip')
+        .style('visibility', 'visible')
+        .style('left', `${mx}px`)
+        .style('top', `${my + 40}px`)
+        // this is what we had before
+        // let's turn it into a GOOD table
+        // (but pls dont use a table...)
+        .text(`Remain: ${ft(datum.pred_remain)}%`);
+    }
+
+    function mouseleft() {
+      d3.select('.tooltip').style('visibility', 'hidden');
+      svg.select('.hover-circle').style('visibility', 'hidden');
+    }
+  }).catch(err => console.warn(err))
+</script>
+
+</html>

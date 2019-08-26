@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>Example 2</title>
+<link rel="stylesheet" href="/css/style.css"></link>
+<script src="/lib/d3.v5.min.js"></script>
+
+<style>
+.container {
+  margin-top: 1em;
+  position: relative;
+  border: 1px solid black;
+}
+.tooltip {
+  position: absolute;
+  /* basic tooltip reset */
+  visibility: hidden;
+  box-sizing: border-box;
+  pointer-events: none;
+  background: white;
+  border: 1px solid #ddd;
+  box-shadow: 0 0 4px rgba(0,0,0,.1);
+  padding: 10px 8px;
+  font-size: 14px;
+  width: 100px;
+}
+</style>
+</head>
+
+<body>
+<nav>
+  <a href="tooltip-1.html">← Previous</a>
+  <a href="/"><i>Exercise list</i></a>
+  <a href="tooltip-3.html">→ Next</a>
+</nav>
+
+
+<h1>Example 2: Using d3.mouse</h1>
+
+<p>d3.mouse is nice because is simple and defaults back to the first touch on mobile screens. It will be removed in <a href="https://github.com/d3/d3-selection/issues/191">d3v6</a>, so please be aware that this will change soon.</p>
+
+<div class="container">
+  <svg class="chart"></svg>
+  <div class="tooltip"></div>
+</div>
+
+<footer>
+  Mastering the tooltip · <a href="https://twitter.com/martgnz">Martín González</a> · <a href="http://visfest.com/unconf2019/">d3 unconf 2019</a>
+</footer>
+
+</body>
+
+<script>
+const margin = {top: 5, right: 10, bottom: 10, left: 10};
+
+const width = 960 - margin.left - margin.right;
+const height = 500 - margin.top - margin.bottom;
+
+const ft = d3.format('.1f');
+
+const svg = d3.select('.chart')
+  .attr('width', width + margin.left + margin.right)
+  .attr('height', height + margin.top + margin.bottom)
+  .append('g')
+  .attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+// let's use a full-width transparent rect 
+svg.append('rect')
+  .attr('fill', 'transparent')
+  .attr('width', width)
+  .attr('height', height)
+  .on('mousemove', mousemoved)
+  .on('mouseleave', mouseleft)
+
+function mousemoved() {
+  // let's use d3.mouse here
+  // remember to ALWAYS pass a NODE
+  // i have forgotten this sooo many times
+  // ...
+
+  d3.select('.tooltip')
+    // how to show and hide our tooltip?
+    // we can use the css visibility property
+}
+
+function mouseleft() {
+  // let's hide our tooltip here
+}
+
+</script>
+
+</html>

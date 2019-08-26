@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>Example 3</title>
+<link rel="stylesheet" href="/css/style.css"></link>
+<script src="/lib/d3.v5.min.js"></script>
+<script src="/lib/d3-delaunay.min.js"></script>
+
+<style>
+.container {
+  position: relative;
+}
+.axis-label {
+  font-size: 14px;
+}
+.tooltip {
+  position: absolute;
+  visibility: hidden;
+  box-sizing: border-box;
+  pointer-events: none;
+  background: white;
+  border: 1px solid #ddd;
+  box-shadow: 0 0 4px rgba(0,0,0,.1);
+  padding: 10px 8px;
+  font-size: 14px;
+  width: 100px;
+}
+</style>
+</head>
+
+<body>
+<nav>
+  <a href="tooltip-2.html">← Previous</a>
+  <a href="/"><i>Exercise list</i></a>
+  <a href="tooltip-4.html">→ Next</a>
+</nav>
+
+
+<h1>Example 3: Charting Brexit</h1>
+
+<p>From now on we're going to use a dataset of Brexit demographics that my colleague <a href="https://twitter.com/JamesFransham">James Fransham</a> put together earlier this year using microdata from YouGov.</p>
+<p>One reason why I chose this dataset is that it has many interesting columns. Read the reference <a href="https://github.com/TheEconomist/graphic-detail-data/tree/master/data/2019-02-23_opinion-on-brexit">here</a>.</p>
+
+<h2 class="chart-title">Support of remain by age groups</h2>
+<h3 class="chart-subtitle">Sample of 2.500 representative demographics</h3>
+
+<div class="container">
+  <svg class="chart"></svg>
+  <div class="tooltip"></div>
+</div>
+
+<small>Sources: YouGov; <a href="https://github.com/TheEconomist/graphic-detail-data/tree/master/data/2019-02-23_opinion-on-brexit"><i>The Economist</i></a></small>
+
+<footer>
+  Mastering the tooltip · <a href="https://twitter.com/martgnz">Martín González</a> · <a href="http://visfest.com/unconf2019/">d3 unconf 2019</a>
+</footer>
+
+</body>
+
+<script>
+const margin = {top: 5, right: 10, bottom: 20, left: 35};
+
+const width = 960 - margin.left - margin.right;
+const height = 500 - margin.top - margin.bottom;
+
+const ft = d3.format('.1f');
+
+const svg = d3.select('.chart')
+  .attr('width', width + margin.left + margin.right)
+  .attr('height', height + margin.top + margin.bottom)
+  .append('g')
+  .attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+d3.csv('/data/brexit_profiles.csv', d3.autoType)
+  .then(data => {
+    const nest = d3.nest()
+      .key(d => d.age_bucket)
+      .entries(data);
+
+    const x = d3.scaleLinear()
+      .domain([0, 100])
+      .range([0, width]);
+      
+    const y = d3.scalePoint()
+      .padding(0.5)
+      .domain(["18-29", "30-44", "45-60", "60-75", "75+"]) // d3.map(data, d => d.age_bucket).keys()
+      .range([height, 0]);
+
+    const radius = 3;
+
+    // nested simulation
+    nest.forEach(group => {
+      const simulation = d3.forceSimulation(group.values)
+        .force('x', d3.forceX(d => x(d.pred_remain)).strength(0.9))
+        .force('y', d3.forceY(d => y(d.age_bucket)))
+        .force('collide', d3.forceCollide(d => radius + 0.25))
+        .stop();
+
+        for (let i = 0; i < 120; ++i) simulation.tick();
+    });
+
+    // flatten data for delaunay
+    const flat = nest.map(d => d.values).flat();
+
+    // we use Delaunay.from to specify our data
+    // and directly pass two data acccesors after that
+    // const delaunay = d3.Delaunay...
+
+    svg.append('g')
+      .attr('class', 'x axis')
+      .attr('transform', `translate(0, ${height})`)
+      .call(d3.axisBottom(x));
+
+    svg.append('g')
+      .attr('class', 'y axis')
+      .call(d3.axisLeft(y).ticks(5));
+
+    svg.append('line')
+      .attr('stroke', '#d3d3d3')
+      .attr('x1', x(50))
+      .attr('x2', x(50))
+      .attr('y2', height);
+
+    // we can paint our circles now
+    svg.append('g')
+      .attr('opacity', 0.75)
+      .attr('stroke', 'white')
+      .attr('fill', d => 'darkorange')
+      .selectAll('g')
+      .data(nest)
+      .join(enter => {
+        enter.append('g')
+          .selectAll('circle')
+          .data(d => d.values)
+          .join('circle')
+          .attr('r', radius)
+          .attr('cx', d => d.x)
+          .attr('cy', d => d.y)
+      });
+    
+    // let's append our circle for hovering here
+    // for example we could give no fill and a black stroke
+    // svg.append('circle')
+      // .attr('class', 'hover-circle')
+      // ...
+
+    // svg.append('rect')
+    //   .attr('fill', 'transparent')
+    //   .attr('width', width)
+    //   .attr('height', height)
+    //   .on('mousemove', mousemoved)
+    //   .on('mouseleave', mouseleft);
+
+    function mousemoved() {
+      const [mx, my] = d3.mouse(svg.node());
+
+      // let's find our point!
+      // same api as d3-voronoi but we get an index
+      // ...
+      
+      // we need to reset the tooltip if we cannot find the point
+      // ...
+
+      // getting the point
+      // remember that we have an index
+      // ...
+
+      // let's paint the circle here
+      // we need to make it visible first
+      // and set cx, cy and radius
+      // svg.select('.hover-circle')
+      // ...
+
+      // aaand let's fill our tooltip
+      // d3.select('.tooltip')
+      //   ...
+    }
+
+    function mouseleft() {
+      // let's hide our tooltip here
+      d3.select('.tooltip').style('visibility', 'hidden');
+      svg.select('.hover-circle').style('visibility', 'hidden');
+    }
+  }).catch(err =>console.warn(err))
+</script>
+
+</html>

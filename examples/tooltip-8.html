@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>Example 8</title>
+<link rel="stylesheet" href="/css/style.css"></link>
+<script src="/lib/d3.v5.min.js"></script>
+<script src="/lib/d3-delaunay.min.js"></script>
+
+<style>
+body {
+  /* remove annoying grey highlight on tap */
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+.container {
+  margin-top: 1em;
+  position: relative;
+}
+.axis-label {
+  font-size: 14px;
+}
+.tooltip {
+  position: absolute;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  width: 250px;
+  visibility: hidden;
+  box-sizing: border-box;
+  pointer-events: none;
+  background: white;
+  border: 1px solid #ddd;
+  box-shadow: 0 0 4px rgba(0,0,0,.1);
+  padding: 6px 8px;
+  font-size: 14px;
+}
+.tooltip .row {
+  display: flex;
+  justify-content: space-between;
+}
+.tooltip .row:not(:last-child) {
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 5px;
+  padding-bottom: 5px;
+}
+.tooltip .hide-pct {
+  visibility: hidden;
+}
+
+/* make our tooltip fixed */
+@media (max-width: 600px){
+  .tooltip {
+    position: fixed;
+    bottom: -1px;
+    width: calc(100%);
+    left: -1px !important;
+    right: -1px !important;
+    top: auto !important;
+    width: auto !important;
+  }
+}
+</style>
+</head>
+
+<body>
+<nav>
+  <a href="tooltip-7.html">← Previous</a>
+  <a href="/"><i>Exercise list</i></a>
+  <a href="tooltip-9.html">← Previous</a>
+</nav>
+
+<h1>Example 8: Responsive tips</h1>
+
+<p>This is mostly stuff borrowed from Gregor Aisch and Adam Pearce's <a href="https://github.com/gka/d3-jetpack#attachTooltip">d3-jetpack</a>.</p>
+
+<h2 class="chart-title">Support of remain by age groups</h2>
+<h3 class="chart-subtitle">Sample of 2.500 representative demographics</h3>
+
+<div class="container">
+  <svg class="chart"></svg>
+  <div class="tooltip"></div>
+</div>
+
+<small>Sources: YouGov; <a href="https://github.com/TheEconomist/graphic-detail-data/tree/master/data/2019-02-23_opinion-on-brexit"><i>The Economist</i></a></small>
+
+<footer>
+  Mastering the tooltip · <a href="https://twitter.com/martgnz">Martín González</a> · <a href="http://visfest.com/unconf2019/">d3 unconf 2019</a>
+</footer>
+
+</body>
+
+<script>
+const margin = { top: 5, right: 10, bottom: 20, left: 35 };
+
+const width = d3.select('.container').node().getBoundingClientRect().width - margin.left - margin.right;
+const height = 500 - margin.top - margin.bottom;
+
+// i usually use 600
+const isMobile = width < 600;
+
+const ft = d3.format('.1f');
+
+const svg = d3.select('.chart')
+  .attr('width', width + margin.left + margin.right)
+  .attr('height', height + margin.top + margin.bottom)
+  .append('g')
+  .attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+d3.csv('/data/brexit_profiles.csv', d3.autoType)
+  .then(data => {
+    const nest = d3.nest()
+      .key(d => d.age_bucket)
+      .entries(data);
+
+    const x = d3.scaleLinear()
+      .domain([0, 100])
+      .range([0, width]);
+
+    const y = d3.scalePoint()
+      .padding(0.5)
+      .domain(["18-29", "30-44", "45-60", "60-75", "75+"])
+      .range([height, 0]);
+
+    const xCounter = d3.scaleLinear()
+      .domain([0, width])
+      .range([0, 250])
+
+    const sexText = d3.scaleOrdinal()
+      .domain(["Male", "Female"])
+      .range(["man", "woman"]);
+
+    const incomeText = d3.scaleOrdinal()
+      .domain(["15_25", "25_35", "35_50", "5_15", "50+"])
+      .range(["£15-25k", "£25-35k", "£35-50k", "£5-15k", "more than £50k"]);
+
+    const remainText = d3.scaleThreshold()
+      .domain([25, 50, 75])
+      .range(["is against remain", "doesn't support remain", "somewhat supports remain", "strongly supports remain"]);
+
+    const educationText = d3.scaleOrdinal()
+      .domain(["1", "2",  "3", "4", "5" ])
+      .range(["has no formal qualifications", "went to secondary school", "has further education", "has a graduate degree", "has a post-graduate degree"]);
+
+    const regionPronoun = d3.scaleOrdinal()
+      .domain(["South", "North", "Midlands"])
+      .range(["the"])
+      .unknown("");
+
+    const politicsText = d3.scaleOrdinal()
+      .domain(["middling", "high", "low" ])
+      .range(["somewhat interested", "very interested", "not interested"]);
+
+    // we can make the radius smaller on phones
+    const radius = isMobile ? 2 : 3;
+
+    nest.forEach(group => {
+      const simulation = d3.forceSimulation(group.values)
+        .force('x', d3.forceX(d => x(d.pred_remain)).strength(0.9))
+        .force('y', d3.forceY(d => y(d.age_bucket)))
+        .force('collide', d3.forceCollide(d => radius + 0.25))
+        .stop();
+
+      for (let i = 0; i < 120; ++i) simulation.tick();
+    });
+
+    const flat = nest.map(d => d.values).flat();
+
+    const delaunay = d3.Delaunay.from(flat, d => d.x, d => d.y);
+
+    svg.append('g')
+      .attr('class', 'x axis')
+      .attr('transform', `translate(0, ${height})`)
+      .call(d3.axisBottom(x));
+
+    svg.append('g')
+      .attr('class', 'y axis')
+      .call(d3.axisLeft(y).ticks(5));
+
+    svg.append('line')
+      .attr('stroke', '#d3d3d3')
+      .attr('x1', x(50))
+      .attr('x2', x(50))
+      .attr('y2', height);
+
+    svg.append('g')
+      .attr('class', 'circles')
+      .attr('opacity', 0.75)
+      .attr('stroke', 'white')
+      .attr('fill', 'darkorange')
+      .selectAll('g')
+      .data(nest)
+      .join(enter => {
+        enter.append('g')
+          .selectAll('circle')
+          .data(d => d.values)
+          .join('circle')
+          .attr('r', radius)
+          .attr('cx', d => d.x)
+          .attr('cy', d => d.y)
+      });
+
+    svg.append('circle')
+      .attr('class', 'hover-circle')
+      .style('visibility', 'hidden')
+      // we can make the higlight bigger, too!
+      .attr('r', isMobile ? radius * 3 : radius)
+      .attr('fill', 'darkorange')
+      .attr('stroke', 'black');
+
+    svg.append('rect')
+      .attr('fill', 'transparent')
+      .attr('width', width)
+      .attr('height', height)
+      .on('mousemove', mousemoved)
+      .on('mouseleave', mouseleft);
+
+    function getDistance(datum, mx, my) {
+      const a = datum.x - mx;
+      const b = datum.y - my;
+
+      return Math.sqrt(a * a + b * b);
+    }
+
+    function mousemoved() {
+      const [mx, my] = d3.mouse(svg.node());
+
+      const idx = delaunay.find(mx, my, 0);
+      const threshold = 20;
+
+      if (idx !== null) {
+        const distance = getDistance(flat[idx], mx, my);
+        return distance < threshold ? highlight(flat[idx], mx, my) : mouseleft();
+      }
+
+      return mouseleft();
+    }
+
+    function highlight(datum, mx, my) {
+      svg.select('.circles').attr('opacity', 0.3);
+
+      svg.select('.hover-circle')
+        .style('visibility', 'visible')
+        .attr('cx', datum.x)
+        .attr('cy', datum.y);
+
+      d3.select('.tooltip')
+        .style('visibility', 'visible')
+        .style('left', `${mx - xCounter(mx)}px`)
+        .style('top', `${my + 30}px`)
+        .html(`A ${datum.age_bucket} year old ${sexText(datum.sex)} who ${remainText(datum.pred_remain)},
+          earns ${incomeText(datum.inc_bucket)},
+          ${educationText(datum.educ_n)}, lives in ${regionPronoun(datum.region6)} ${datum.region6}
+          and is ${politicsText(datum.poli_int_bucket)} in politics`);
+    }
+
+    function mouseleft() {
+      d3.select('.tooltip').style('visibility', 'hidden');
+      svg.select('.hover-circle').style('visibility', 'hidden');
+      svg.select('.circles').attr('opacity', 0.75);
+    }
+  }).catch(err => console.warn(err))
+</script>
+
+</html>

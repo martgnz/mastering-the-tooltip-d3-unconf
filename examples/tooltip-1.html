@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>Example 1</title>
+<link rel="stylesheet" href="/css/style.css"></link>
+<script src="/lib/d3.v5.min.js"></script>
+
+<style>
+.container {
+  margin-top: 1em;
+  /* we need a container with position relative */
+  position: relative;
+  border: 1px solid black;
+}
+.tooltip {
+  /* that way our tooltip is relative to its parent */
+  position: absolute;
+}
+</style>
+</head>
+
+<body>
+<nav>
+  <a href="#"></a>
+  <a href="/"><i>Exercise list</i></a>
+  <a href="tooltip-2.html">→ Next</a>
+</nav>
+
+<h1>Example 1: Let's start!</h1>
+
+<p>To start we can print <i>x</i> and <i>y</i> on the screen.</p>
+
+<div class="container">
+  <svg class="chart"></svg>
+  <div class="tooltip"></div>
+</div>
+
+<footer>
+  Mastering the tooltip · <a href="https://twitter.com/martgnz">Martín González</a> · <a href="http://visfest.com/unconf2019/">d3 unconf 2019</a>
+</footer>
+
+</body>
+
+<script>
+const margin = {top: 5, right: 10, bottom: 10, left: 10};
+
+const width = 960 - margin.left - margin.right;
+const height = 500 - margin.top - margin.bottom;
+
+const ft = d3.format('.1f');
+
+const svg = d3.select('.chart')
+  .attr('width', width + margin.left + margin.right)
+  .attr('height', height + margin.top + margin.bottom)
+  .append('g')
+  .attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+// let's use a full-width transparent rect 
+svg.append('rect')
+  .attr('fill', 'transparent')
+  .attr('width', width)
+  .attr('height', height)
+  .on('mousemove', mousemoved);
+
+function mousemoved() {
+  // and we can use d3.mouse to get x and  y
+  // note: this will change with d3 v6
+}
+
+</script>
+
+</html>
