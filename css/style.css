@@ -19,6 +19,9 @@ code {
 ul li {
   margin-bottom: 0.5em;
 }
+ul li:last-child {
+  margin-bottom: 0;
+}
 a {
   color: #2976a2;
   text-decoration: none;
